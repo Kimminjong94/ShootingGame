@@ -1,88 +1,122 @@
-//
-//  GameScene.swift
-//  ShootingGame
-//
-//  Created by 김민종 on 2021/12/13.
-//
+
 
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+var player = SKSpriteNode()
+var myWeapon = SKSpriteNode()
+var enemy = SKSpriteNode()
+var star = SKSpriteNode()
+
+var scoreLabel = SKLabelNode()
+var mainLabel = SKLabelNode()
+
+var playerSize = CGSize(width: 120, height: 120)
+var myWeaponSize = CGSize(width: 30, height: 30)
+var enemySize = CGSize(width: 120, height: 120)
+var starSize = CGSize()
+
+var gameRedColor = UIColor(red: 0.5, green: 0.2, blue: 0.2, alpha: 0.1)
+var gameWhiteColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
+
+var myWeaponRate = 0.2
+var myWeaponSpeed = 0.9
+
+var enemySpeed = 2.5
+var enemySpawnRate = 1.5
+
+var isAlive = true
+var score = 0
+
+var touchLocation = CGPoint()
+
+struct physicsCategory {
+    static let player: UInt32 = 0
+    static let myWeapon: UInt32 = 1
+    static let enemy: UInt32 = 2
+}
+
+
+
+
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
-    private var label : SKLabelNode?
-    private var spinnyNode : SKShapeNode?
-    
+
     override func didMove(to view: SKView) {
         
-        // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-        if let label = self.label {
-            label.alpha = 0.0
-            label.run(SKAction.fadeIn(withDuration: 2.0))
+        let background = SKSpriteNode(imageNamed: "desertBackground")
+        DispatchQueue.global(qos: .background).async {
+            background.zPosition = -1
+            background.size = self.frame.size
+            background.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            background.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
+//            background.size = CGSize(width: self.size.width, height: self.size.height)
+            self.addChild(background)
+            self.physicsWorld.contactDelegate = self
         }
+        myPlayer()
+        print("Current thread is \(#function) is \(Thread.current)")
+
+    }
+    
+    func myPlayer() {
         
-        // Create shape node to use during mouse interaction
-        let w = (self.size.width + self.size.height) * 0.05
-        self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
-        
-        if let spinnyNode = self.spinnyNode {
-            spinnyNode.lineWidth = 2.5
+        DispatchQueue.main.async {
+            player = SKSpriteNode(imageNamed: "myShip2")
+            player.size = playerSize
+            player.position = CGPoint(x: self.frame.midX, y: self.frame.minY + 150)
             
-            spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(Double.pi), duration: 1)))
-            spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-                                              SKAction.fadeOut(withDuration: 0.5),
-                                              SKAction.removeFromParent()]))
+            player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
+            player.physicsBody?.affectedByGravity = false
+            player.physicsBody?.allowsRotation = false
+            player.physicsBody?.isDynamic = false
+            player.physicsBody?.categoryBitMask = physicsCategory.player
+            player.physicsBody?.contactTestBitMask = physicsCategory.enemy
+            player.name = "playerName"
+            self.addChild(player)
         }
+        print("Current thread is \(#function) is \(Thread.current)")
+
     }
     
     
     func touchDown(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.green
-            self.addChild(n)
-        }
+
     }
     
     func touchMoved(toPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.blue
-            self.addChild(n)
-        }
+
     }
     
     func touchUp(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.red
-            self.addChild(n)
-        }
+
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let label = self.label {
-            label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-        }
-        
-        for t in touches { self.touchDown(atPoint: t.location(in: self)) }
+
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
+        for touch in touches {
+            let location = touch.location(in: self)
+            
+            player.position.x = location.x
+            player.position.y = location.y
+        }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
     }
     
     
     override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+        
     }
+
 }
+
+
