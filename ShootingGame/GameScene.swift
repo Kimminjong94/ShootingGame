@@ -41,28 +41,48 @@ struct physicsCategory {
 
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+
     
+    
+//    private func fetchImage() {
+//
+//        guard let url = URL(string: url) else {
+//            return
+//        }
+//        let getDataTask = URLSessionTask.shared.dataTask(with: url, completionHandler: {data, _, error in
+//            guard let data = datea, error = nil else {
+//                return
+//            }
+//            let image = UIImage(data: data)
+//
+//        })
+//    }
+    
+
 
     override func didMove(to view: SKView) {
         
-        let background = SKSpriteNode(imageNamed: "desertBackground")
-        DispatchQueue.global(qos: .background).async {
-            background.zPosition = -1
-            background.size = self.frame.size
-            background.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            background.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
-//            background.size = CGSize(width: self.size.width, height: self.size.height)
-            self.addChild(background)
-            self.physicsWorld.contactDelegate = self
-        }
         myPlayer()
+
+
+        DispatchQueue.global(qos: .background).async {
+            let url = URL(string: "https://upload.wikimedia.org/wikipedia/commons/b/b3/Sanfran-night.jpg")
+            let data = NSData(contentsOf: url! as URL)
+            let theImage = UIImage(data: data! as Data)
+            let Texture = SKTexture(image: theImage!)
+            let mySprite = SKSpriteNode(texture: Texture)
+            self.addChild(mySprite)
+
+        }
+        
+        
         print("Current thread is \(#function) is \(Thread.current)")
 
     }
     
     func myPlayer() {
         
-        DispatchQueue.main.async {
+        DispatchQueue.global(qos: .userInteractive).async {
             player = SKSpriteNode(imageNamed: "myShip2")
             player.size = playerSize
             player.position = CGPoint(x: self.frame.midX, y: self.frame.minY + 150)
@@ -80,6 +100,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     }
     
+    func resetGameVariablesOnStart() {
+        isAlive = true
+        score = 0
+    }
+    
     
     func touchDown(atPoint pos : CGPoint) {
 
@@ -94,7 +119,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-
+        for touch in touches {
+            touchLocation = touch.location(in: player)
+        }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -115,6 +142,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         
+        
+    }
+    func getImage(from url: String, completion: @escaping (UIImage?) -> Void) {
+        let task = URLSession.shared.dataTask(with: URL(string: url)!) { data, _, _ in
+            guard let data = data, let image = UIImage(data: data) else {
+                return
+            }
+            DispatchQueue.main.async {
+                completion(image)
+            }
+        }
+        task.resume()
     }
 
 }
